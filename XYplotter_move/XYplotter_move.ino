@@ -15,10 +15,10 @@ MeStepper stepper1(PORT_1);
 MeStepper stepper2(PORT_2); 
 
 /* Limit Seitch */
-/*MeLimitSwitch limitSwitchA_1(PORT_3,  SLOT1);
+MeLimitSwitch limitSwitchA_1(PORT_3,  SLOT1);
 MeLimitSwitch limitSwitchA_2(PORT_3,  SLOT2);
 MeLimitSwitch limitSwitchB_1(PORT_6,  SLOT1);
-MeLimitSwitch limitSwitchB_2(PORT_6,  SLOT2);*/
+MeLimitSwitch limitSwitchB_2(PORT_6,  SLOT2);
 
 /* 変更できる変数たち */
 int MaxSpeed = 5000;
@@ -34,13 +34,12 @@ void setup() {
   stepper1.setAcceleration(Acceleration);
   stepper2.setMaxSpeed(MaxSpeed);
   stepper2.setAcceleration(Acceleration);
-  
 }
 
 /*------------------ LOOP -------------------*/
 void loop() {
   easyMove();
-  //delay(1);
+  //FirstSetup();
 }
 
 /* シリアルから数字を受け取る(未完成) */
@@ -69,9 +68,18 @@ long serialNumberCatch(){
   return(0);
 }
 
+/* 初期移動（0地点を探す） */
+void FirstSetup(){
+  stepper1.move(-3200);
+  stepper2.move(-3200);
+  while(!limitSwitchA_1.touched()){
+    stepper1.run();
+  stepper2.run();
+    }
+}
+
 /* ++ ステッピングモータを簡単に動かすプログラム ++ */
 void easyMove(){
-  Serial.println(Serial.available());
   if(Serial.available()){
     char a = Serial.read();
     Serial.print("a : ");
@@ -97,7 +105,7 @@ void easyMove(){
       stepper1.move(4000);
       break;
       case '6':
-      stepper1.move(600);
+      stepper1.move(-6000);
       break;
       case '7':
       stepper1.move(4000);
@@ -110,7 +118,9 @@ void easyMove(){
       break;
     }
   }
+  if(!limitSwitchB_2.touched()){
   stepper1.run();
+  }
 }
 
 /*
