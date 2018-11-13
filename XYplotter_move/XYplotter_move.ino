@@ -35,11 +35,14 @@ const int Acceleration = 10000;
 /* フラグ */
 int firstRun = 0;
 
+/* 受け取るフラグ */
+int flag[2] = {0, 0};
+int fServo = 0;
+
 /*----------------- SET UP ---------------*/
 void setup() {
   Serial.begin(9600);
-  printReadMe();
-  Serial.println("Start.");
+  // printReadMe();
   
   // Stepper
   stepper1.setMaxSpeed(MaxSpeed);
@@ -61,7 +64,10 @@ void loop() {
     FirstSetup();
     firstRun = 1;
   }
-  easyMove();
+  // easyMove();
+  serialNumberCatch();
+  stepper1.run();
+  stepper2.run();
 }
 
 
@@ -119,6 +125,7 @@ void printReadMe(){
   Serial.println("9:servo1,write,135");
   Serial.println("a:servo2,write,0");
   Serial.println("b:servo2,write,130");
+  Serial.println("Start.");
 }
 
 /* サーボの動き */
@@ -204,28 +211,89 @@ void limitSwitchOn(){
 }
 */
 /* ----- 外部との接続 ----- */
-/* シリアルから数字を受け取る(未完成) */
-/*long serialNumberCatch(){
-  byte data_size = Serial.available();
-
-  if(data_size > 2){
-    delay(20);
-    data_size = Serial.available();
-    byte buf[data_size];
- 
-    for (byte i = 0 ; i < data_size; i++){
-      buf[i] = Serial.read() - '0';
+/* シリアルから座標を受け取る */
+void serialNumberCatch(){
+  if(Serial.available() >= 3 ){
+    if(Serial.read() == 'H'){
+      flag[0] = Serial.read();
+      flag[1] = Serial.read();
     }
-
-    long res = 0;
-    long dub = 1;
-    for(byte j = data_size-3; j > 0; j--){
-      res = res + (buf[j]*dub);
-      dub*=10;
+    
+    switch(flag[1]){
+      case 0:
+      stepper1.moveTo(0);
+      break;
+      case 1:
+      stepper1.moveTo(30000 / 8);
+      break;
+       case 2:
+      stepper1.moveTo(30000 / 8 * 2);
+      break;
+       case 3:
+      stepper1.moveTo(30000 / 8 * 3);
+      break;
+       case 4:
+      stepper1.moveTo(30000 / 8 * 4);
+      break;
+       case 5:
+      stepper1.moveTo(30000 / 8 * 5);
+      break;
+      case 6:
+      stepper1.moveTo(30000 / 8 * 6);
+      break;
+       case 7:
+      stepper1.moveTo(30000 / 8 * 7);
+      break;
     }
-    res = res + (buf[0]*dub);
-    Serial.println(res);
-    return(res);
+    switch(flag[0]){
+      case 7:
+      stepper2.moveTo(0);
+      break;
+      case 6:
+      stepper2.moveTo(40000 / 8);
+      break;
+       case 5:
+      stepper2.moveTo(40000 / 8 * 2);
+      break;
+       case 4:
+      stepper2.moveTo(40000 / 8 * 3);
+      break;
+       case 3:
+      stepper2.moveTo(40000 / 8 * 4);
+      break;
+       case 2:
+      stepper2.moveTo(40000 / 8 * 5);
+      break;
+      case 1:
+      stepper2.moveTo(40000 / 8 * 6);
+      break;
+       case 0:
+      stepper2.moveTo(40000 / 8 * 7);
+      break;
+    }
   }
-  return(0);
-}*/
+  /* サーボ */
+  if(Serial.available() == 2 ){
+    if(Serial.read() == 'G'){
+      fServo = Serial.read();
+    }
+    switch(fServo){
+      case 0:
+      myservo1.write(0);
+      break;
+      case 1:
+      myservo1.write(170);
+      break;
+      case 2:
+      myservo2.write(0);
+      break;
+      case 3:
+      myservo2.write(140);
+      break;
+    }
+    delay(200);
+  }
+}
+
+/* 8*8のパターン */
+
