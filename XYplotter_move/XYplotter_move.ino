@@ -21,6 +21,13 @@ MeLimitSwitch limitSwitchA_2(PORT_3,  SLOT2);
 MeLimitSwitch limitSwitchB_1(PORT_6,  SLOT1);
 MeLimitSwitch limitSwitchB_2(PORT_6,  SLOT2);
 
+/* サーボ */
+MePort port(PORT_4);
+Servo myservo1;
+Servo myservo2;
+int16_t servo1pin =  port.pin1();
+int16_t servo2pin =  port.pin2();
+
 /* 変更できる変数たち */
 const int MaxSpeed = 10000;
 const int Acceleration = 10000;
@@ -31,6 +38,7 @@ int firstRun = 0;
 /*----------------- SET UP ---------------*/
 void setup() {
   Serial.begin(9600);
+  printReadMe();
   Serial.println("Start.");
   
   // Stepper
@@ -38,6 +46,13 @@ void setup() {
   stepper1.setAcceleration(Acceleration);
   stepper2.setMaxSpeed(MaxSpeed);
   stepper2.setAcceleration(Acceleration);
+
+  // サーボ
+  myservo1.attach(servo1pin);
+  myservo2.attach(servo2pin);
+  myservo1.write(0); 
+  myservo2.write(0); 
+  delay(100);
 }
 
 /*------------------ LOOP -------------------*/
@@ -53,15 +68,15 @@ void loop() {
 /* 初期移動（0地点を右前に設定・） */
 void FirstSetup(){
   while(1){
-    if(!limitSwitchB_2.touched()){
+    if(lsFlag() != 4 ){
       stepper1.move(-500);
       stepper1.run();
       }
-    if(!limitSwitchA_1.touched()){
+    if(lsFlag() !=  1){
       stepper2.move(-500);
       stepper2.run();
       }
-      if(limitSwitchA_1.touched() && limitSwitchB_2.touched()){
+      if(lsFlag() == 5){
         stepper1.setCurrentPosition(0); /* 0ポイントに設定 */
         stepper2.setCurrentPosition(0);
         break;
@@ -69,6 +84,44 @@ void FirstSetup(){
     }
 }
 
+/* リミットスイッチに当たったら数値を返すだけ */
+int lsFlag(){
+  if(limitSwitchA_1.touched() && !limitSwitchB_2.touched()){
+    return 1;
+  } else if(limitSwitchA_2.touched() && !limitSwitchB_1.touched()){
+    return 2;
+  } else if(!limitSwitchA_2.touched() && limitSwitchB_1.touched()){
+    return 3;
+  } else if(!limitSwitchA_1.touched() && limitSwitchB_2.touched()){
+    return 4;
+  } else if(limitSwitchA_1.touched() && limitSwitchB_2.touched()){
+    /* 1と4が同時に押されているとき */
+    return 5;
+  } else if(limitSwitchA_2.touched() && limitSwitchB_1.touched()){
+    /* 2と3が同時に押されているとき */
+    return 6;
+  } else {
+    return 0;
+  }
+}
+
+/* 最初の注意書き */
+void printReadMe(){
+  Serial.println("0:stepper1,moveTo,0");
+  Serial.println("1:stepper2,moveTo,0");
+  Serial.println("2:stepper1,moveTo,1000");
+  Serial.println("3:stepper2,moveTo,1000");
+  Serial.println("4:stepper1,move,-2000");
+  Serial.println("5:stepper1,move,2000");
+  Serial.println("6:stepper2,move,-2000");
+  Serial.println("7:stepper2,move,2000");
+  Serial.println("8:servo1,write,0");
+  Serial.println("9:servo1,write,135");
+  Serial.println("a:servo2,write,0");
+  Serial.println("b:servo2,write,130");
+}
+
+/* サーボの動き */
 /* ++ ステッピングモータを簡単に動かすプログラム ++ */
 void easyMove(){
   if(Serial.available()){
@@ -81,40 +134,41 @@ void easyMove(){
       stepper1.moveTo(0);
       break;
       case '1':
-      stepper1.moveTo(200);
+      stepper2.moveTo(0);
       break;
       case '2':
-      stepper1.moveTo(500);
+      stepper1.moveTo(1000);
       break;
       case '3':
-      stepper1.move(500);
+      stepper2.moveTo(1000);
       break;
       case '4':
-      stepper1.move(-1000);
+      stepper1.move(-3000);
       break;
       case '5':
-      stepper1.move(4000);
+      stepper1.move(3000);
       break;
       case '6':
-      stepper1.move(-6000);
+      stepper2.move(-3000);
       break;
       case '7':
-      stepper1.move(4000);
+      stepper2.move(3000);
       break;
       case '8':
-      stepper1.move(15000);
+      myservo1.write(0); 
+      delay(1000);
       break;
       case '9':
-      stepper1.move(-15000);
+      myservo1.write(140);
+      delay(1000); 
       break;
       case 'a':
-      stepper2.move(-15000);
+      myservo2.write(0); 
+      delay(1000);
       break;
       case 'b':
-      stepper2.move(15000);
-      break;
-      case 'c':
-      stepper2.moveTo(0);
+      myservo2.write(130);
+      delay(1000); 
       break;
     }
   }
