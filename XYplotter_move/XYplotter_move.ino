@@ -288,7 +288,7 @@ void serialNumberCatch(){
       myservo2.write(0);
       break;
       case 3:
-      myservo2.write(140);
+      myservo2.write(200);
       break;
     }
     delay(200);
