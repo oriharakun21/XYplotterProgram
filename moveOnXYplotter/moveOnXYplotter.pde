@@ -4,15 +4,15 @@ Serial serial;
 
 int moX, moY; // マウスの座標をとる（ほぼデバック用）
 int[] gridFlag = new int [2]; // 座標を保持してフラグとして送る
-int[] servoFlag = new int [2]; // サーボのオンオフ
+boolean[] servoState = {false, false}; // サーボのオンオフ
 
 /* 枠組みやサイズなどを指定 */
 // XYプロッターの操作部分
 final int BORDER = 700; // 外枠
 final int UPPERLEFT_X = 100; // 左上のX
 final int UPPERLEFT_Y = 400; // 左上のY
-final int POINTDOT = 30; // 座標のポイント
-final int POINTMARGIN = 50; // ポイントのマージン
+final int POINTDOT = 50; // 座標のポイント
+final int POINTMARGIN = 32; // ポイントのマージン
 final int POINTDM = POINTDOT+POINTMARGIN; // サイズとマージンをまとめたもの
 final int UPPERLEFTPOINT_X = UPPERLEFT_X+POINTMARGIN; // ポイントの左上のX
 final int UPPERLEFTPOINT_Y = UPPERLEFT_Y+POINTMARGIN; // ポイントの左上のY
@@ -34,7 +34,7 @@ PImage img;
 /* ----- ここからセットアップ ----- */
 void setup(){
   size(900,1200);
-  // serial = new Serial(this, "COM3", 9600);
+  serial = new Serial(this, "COM3", 9600);
   img = loadImage("img1.png");
 }
 
@@ -45,14 +45,14 @@ void draw(){
    drawServoUpDown(0);
    drawServoUpDown(1);
    drawPlotter();
-   println(servoFlag[1]);
 }
 
 /* ------ マウスが押して話されたとき ------ */
 void mouseClicked(){
-  /*arduinoSerialSendGrid();
-  arduinoSerialSendServo(0);
-  arduinoSerialSendServo(1);*/
+    arduinoSerialSendGrid();
+    
+    arduinoSerialSendServo(0);
+    arduinoSerialSendServo(1);
 }
 
 /* 座標の送る部分 */
@@ -71,8 +71,15 @@ void arduinoSerialSendGrid(){
 void arduinoSerialSendServo(int x){
   if((mouseX > SERVOBOTTON_X[x]) && (mouseX < SERVOBOTTON_X[x] + SERVOBORDER_W)){
     if((mouseY > SERVOBOTTON_Y[x]) && (mouseY < SERVOBOTTON_Y[x] + SERVOBORDER_H)){
-      serial.write('G'); // フラグ
-      serial.write(servoFlag[x]);
+      switch(x){
+        case 0:
+        serial.write('a'); // フラグ
+        break;
+        case 1:
+        serial.write('b'); // フラグ
+        break;
+      }
+      serial.write(int(servoState[x]));
     }
   }
 }
@@ -115,16 +122,13 @@ void drawServoUpDown(int x){
   if((mouseX > (SERVOBOTTON_X[x])) && (mouseX < (SERVOBOTTON_X[x]+SERVOBORDER_W))) {
     if((mouseY > (SERVOBOTTON_Y[x])) && (mouseY < (SERVOBOTTON_Y[x]+SERVOBORDER_H))){
       fill(R1, G1, B1);
-        if(mousePressed){
-          if(servoFlag[x] == 0){
-            servoFlag[x] = 1;
-          } else {
-            servoFlag[x] = 0;
-          }
-        }
-        }
+      if(mousePressed){
+        servoState[x] = !servoState[x];
       }
-      if(servoFlag[x] == 1){
+    }
+  }
+  
+  if(servoState[x]){
     fill(R1, G1, B1);
   }
     rect(SERVOBOTTON_X[x], SERVOBOTTON_Y[x], SERVOBORDER_W, SERVOBORDER_H);

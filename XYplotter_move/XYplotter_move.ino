@@ -34,6 +34,8 @@ const int Acceleration = 10000;
 
 /* フラグ */
 int firstRun = 0;
+int autoCount = 0;
+double sycle = 0.00;
 
 /* 受け取るフラグ */
 int flag[2] = {0, 0};
@@ -53,9 +55,6 @@ void setup() {
   // サーボ
   myservo1.attach(servo1pin);
   myservo2.attach(servo2pin);
-  myservo1.write(0); 
-  myservo2.write(0); 
-  delay(100);
 }
 
 /*------------------ LOOP -------------------*/
@@ -64,15 +63,22 @@ void loop() {
     FirstSetup();
     firstRun = 1;
   }
+
+  autoMove();
   // easyMove();
-  serialNumberCatch();
-  stepper1.run();
-  stepper2.run();
+  //stepper1.run();
+  //stepper2.run();
+  /*serialNumberCatch();
+  serialServoCatch();*/
 }
 
 
 /* 初期移動（0地点を右前に設定・） */
 void FirstSetup(){
+  myservo1.write(0);
+  delay(100);
+  myservo2.write(0); 
+  delay(100);
   while(1){
     if(lsFlag() != 4 ){
       stepper1.move(-500);
@@ -179,10 +185,8 @@ void easyMove(){
       break;
     }
   }
-  /*if(!limitSwitchB_2.touched()){*/
   stepper1.run();
   stepper2.run();
-  /*}*/
 }
 
 /*
@@ -213,7 +217,7 @@ void limitSwitchOn(){
 /* ----- 外部との接続 ----- */
 /* シリアルから座標を受け取る */
 void serialNumberCatch(){
-  if(Serial.available() >= 3 ){
+  if(Serial.available() == 3 ){
     if(Serial.read() == 'H'){
       flag[0] = Serial.read();
       flag[1] = Serial.read();
@@ -272,28 +276,80 @@ void serialNumberCatch(){
       break;
     }
   }
+}
+
+void serialServoCatch(){
   /* サーボ */
-  if(Serial.available() == 2 ){
-    if(Serial.read() == 'G'){
+  if(Serial.available() < 3 ){
+    if(Serial.read() == 'a'){
       fServo = Serial.read();
+      if(fServo == 0){
+        myservo1.write(0);
+        delay(10);
+      } else if(fServo == 1){
+        myservo1.write(120);
+        delay(10);
+      }
+    } else if(Serial.read() == 'b'){
+      fServo = Serial.read();
+      if(fServo == 0){
+        myservo2.write(0);
+        delay(10);
+      } else if(fServo == 1){
+        myservo2.write(120);
+        delay(10);
+      }
     }
-    switch(fServo){
-      case 0:
-      myservo1.write(0);
-      break;
-      case 1:
-      myservo1.write(170);
-      break;
-      case 2:
-      myservo2.write(0);
-      break;
-      case 3:
-      myservo2.write(200);
-      break;
-    }
-    delay(200);
   }
 }
 
-/* 8*8のパターン */
+void autoMove(){
+  /* -- フェイズ0 -- */
+  if(autoCount == (0)){
+    long start = millis();
+    if(start == millis()){
+      stepper1.moveTo(0.00);
+      stepper2.moveTo(40000 / 8.00 * (2.00 + sycle));
+    }
+    while(millis() < start + 2000) {
+      stepper1.run();
+      stepper2.run();
+      }
+    if(millis() >= start + 2000){
+      autoCount++;
+    }
+    /* -- フェイズ1 -- */
+  } else if(autoCount == 1){
+    stepper1.moveTo(30000 / 8.00 * 7.30);
+    stepper2.moveTo(40000 / 8.00 * (2.00 + sycle));
+    while(!limitSwitchB_1.touched()){
+      stepper1.run();
+      stepper2.run();
+    }
+    if(limitSwitchB_1.touched()){
+      myservo1.write(180);
+      autoCount = 2;
+    }
+    /* -- フェイズ2 -- */
+  } else if(autoCount == 2){
+    stepper1.moveTo(0);
+    stepper2.moveTo(40000 / 8.00 * (2.00 + sycle));
+    while(!limitSwitchB_2.touched()){
+      stepper1.run();
+      stepper2.run();
+    }
+    if(limitSwitchB_2.touched()){
+      myservo1.write(0);
+      autoCount = 3;
+    }
+  } else {
+    sycle = sycle + 1.00;
+    autoCount = 0;
+    if(sycle == 5){
+      sycle = 0;
+      firstRun = 0;
+    }
+    Serial.println("end");
+  }
+}
 
