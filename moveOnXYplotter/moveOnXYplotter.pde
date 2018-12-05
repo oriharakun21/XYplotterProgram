@@ -49,22 +49,21 @@ void draw(){
 
 /* ------ マウスが押して話されたとき ------ */
 void mouseClicked(){
-    arduinoSerialSendGrid();
-    
-    arduinoSerialSendServo(0);
-    arduinoSerialSendServo(1);
+    arduinoSerialSend();
 }
 
 /* 座標の送る部分 */
-void arduinoSerialSendGrid(){
+void arduinoSerialSend(){
   /* 座標のフラグを送る */
   if((mouseX > UPPERLEFT_X) && (mouseX < UPPERLEFT_X + BORDER)){
     if((mouseY > UPPERLEFT_Y) && (mouseY < UPPERLEFT_Y + BORDER)){
-      serial.write('H'); // フラグ
+      serial.write('h'); // フラグ
       serial.write(gridFlag[0]);
       serial.write(gridFlag[1]);
     }
   }
+  arduinoSerialSendServo(0);
+  arduinoSerialSendServo(1);
 }
 
   /* サーボのオンオフ(送信) */ 
@@ -73,12 +72,13 @@ void arduinoSerialSendServo(int x){
     if((mouseY > SERVOBOTTON_Y[x]) && (mouseY < SERVOBOTTON_Y[x] + SERVOBORDER_H)){
       switch(x){
         case 0:
-        serial.write('a'); // フラグ
+        serial.write('g'); // フラグ
         break;
         case 1:
-        serial.write('b'); // フラグ
+        serial.write('f'); // フラグ
         break;
       }
+      serial.write(int(servoState[x]));
       serial.write(int(servoState[x]));
     }
   }
@@ -121,7 +121,7 @@ void drawServoUpDown(int x){
   fill(BGC);
   if((mouseX > (SERVOBOTTON_X[x])) && (mouseX < (SERVOBOTTON_X[x]+SERVOBORDER_W))) {
     if((mouseY > (SERVOBOTTON_Y[x])) && (mouseY < (SERVOBOTTON_Y[x]+SERVOBORDER_H))){
-      fill(R1, G1, B1);
+      fill(R1+50, G1+50, B1);
       if(mousePressed){
         servoState[x] = !servoState[x];
       }

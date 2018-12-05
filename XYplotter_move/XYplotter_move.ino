@@ -38,8 +38,9 @@ int autoCount = 0;
 double sycle = 0.00;
 
 /* 受け取るフラグ */
+char chara;
 int flag[2] = {0, 0};
-int fServo = 0;
+int fServo[2] = {0, 0};
 
 /*----------------- SET UP ---------------*/
 void setup() {
@@ -64,12 +65,9 @@ void loop() {
     firstRun = 1;
   }
 
-  autoMove();
+  // autoMove();
   // easyMove();
-  //stepper1.run();
-  //stepper2.run();
-  /*serialNumberCatch();
-  serialServoCatch();*/
+  serialNumberCatch();
 }
 
 
@@ -189,38 +187,20 @@ void easyMove(){
   stepper2.run();
 }
 
-/*
-void limitSwitchOn(){
-  
-  if(limitSwitch.touched() )      // If the limit switch is touched, the  return value is true.
-  {
-    Serial.println("State: DOWN.");
-    delay(1);
-    while(limitSwitch.touched() )
-    {
-      ;// Repeat check the switch state, until released.
-    }
-    delay(2);
-  }
-  if(!limitSwitch.touched() )
-  {
-    Serial.println("State: UP.");
-    delay(1);
-    while(!limitSwitch.touched() )
-    {
-      ;
-    }
-    delay(2);
-  }
-}
-*/
 /* ----- 外部との接続 ----- */
 /* シリアルから座標を受け取る */
 void serialNumberCatch(){
-  if(Serial.available() == 3 ){
-    if(Serial.read() == 'H'){
+  if(Serial.available() > 2 ){
+    chara = Serial.read();
+    if(chara == 'h'){
       flag[0] = Serial.read();
       flag[1] = Serial.read();
+    }else if(chara == 'g'){
+      fServo[0] = Serial.read();
+      fServo[0] = Serial.read();
+    } else if(chara == 'f'){
+      fServo[1] = Serial.read();
+      fServo[1] = Serial.read();
     }
     
     switch(flag[1]){
@@ -275,32 +255,23 @@ void serialNumberCatch(){
       stepper2.moveTo(40000 / 8 * 7);
       break;
     }
-  }
-}
-
-void serialServoCatch(){
-  /* サーボ */
-  if(Serial.available() < 3 ){
-    if(Serial.read() == 'a'){
-      fServo = Serial.read();
-      if(fServo == 0){
+    if(fServo[0] == 0){
         myservo1.write(0);
-        delay(10);
-      } else if(fServo == 1){
+        // delay(10);
+      } else if(fServo[0] == 1){
         myservo1.write(120);
-        delay(10);
-      }
-    } else if(Serial.read() == 'b'){
-      fServo = Serial.read();
-      if(fServo == 0){
-        myservo2.write(0);
-        delay(10);
-      } else if(fServo == 1){
-        myservo2.write(120);
-        delay(10);
+        // delay(10);
       }
     }
-  }
+    if(fServo[1] == 0){
+        myservo2.write(0);
+        // delay(10);
+      } else if(fServo[1] == 1){
+        myservo2.write(120);
+        // delay(10);
+      }
+  stepper1.run();
+  stepper2.run();
 }
 
 void autoMove(){
