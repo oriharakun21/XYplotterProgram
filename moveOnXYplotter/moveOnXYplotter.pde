@@ -4,7 +4,6 @@ Serial serial;
 
 int moX, moY; // マウスの座標をとる（ほぼデバック用）
 int[] gridFlag = new int [2]; // 座標を保持してフラグとして送る
-boolean[] servoState = {false, false}; // サーボのオンオフ
 
 /* 枠組みやサイズなどを指定 */
 // XYプロッターの操作部分
@@ -20,8 +19,14 @@ final int UPPERLEFTPOINT_Y = UPPERLEFT_Y+POINTMARGIN; // ポイントの左上�
 // サーボの操作部分
 final int SERVOBORDER_W = 160; 
 final int SERVOBORDER_H = 90;
-int[] SERVOBOTTON_X = {320, 500};
-int[] SERVOBOTTON_Y = {180, 180};
+int[] SERVOBOTTON_X = {320, 320};
+int[] SERVOBOTTON_Y = {100, 200};
+boolean[] servoState = {false, false}; // サーボのオンオフ
+
+// オートボタン
+final int AUTO_W = 180;
+final int AUTO_X = 500;
+final int AUTO_Y = 100;
 
 
 // 色
@@ -45,6 +50,7 @@ void draw(){
    drawServoUpDown(0);
    drawServoUpDown(1);
    drawPlotter();
+   autoMode();
 }
 
 /* ------ マウスが押して話されたとき ------ */
@@ -64,6 +70,7 @@ void arduinoSerialSend(){
   }
   arduinoSerialSendServo(0);
   arduinoSerialSendServo(1);
+  autoModeSend();
 }
 
   /* サーボのオンオフ(送信) */ 
@@ -80,6 +87,16 @@ void arduinoSerialSendServo(int x){
       }
       serial.write(int(servoState[x]));
       serial.write(int(servoState[x]));
+    }
+  }
+}
+/* オート走査のオンオフ */
+void autoModeSend(){
+  if((mouseX > AUTO_X) && (mouseX < AUTO_X + AUTO_W)){
+    if((mouseY > AUTO_Y) && (mouseY < AUTO_Y + AUTO_W)){
+      serial.write('e'); // フラグ
+      serial.write(1);
+      serial.write(1);
     }
   }
 }
@@ -133,4 +150,18 @@ void drawServoUpDown(int x){
   }
     rect(SERVOBOTTON_X[x], SERVOBOTTON_Y[x], SERVOBORDER_W, SERVOBORDER_H);
     fill(BGC);
+}
+
+void autoMode(){
+  fill(BGC);
+  if((mouseX > AUTO_X) && (mouseX < AUTO_X + AUTO_W)){
+    if((mouseY > AUTO_Y) && (mouseY < AUTO_Y + AUTO_W)){
+      fill(R1+50, G1+50, B1);
+      if(mousePressed){
+        fill(R1, G1, B1);
+      }
+    }
+  }
+  rect(AUTO_X, AUTO_Y, AUTO_W, AUTO_W);
+  fill(BGC);
 }

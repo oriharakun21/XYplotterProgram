@@ -41,6 +41,8 @@ double sycle = 0.00;
 char chara;
 int flag[2] = {0, 0};
 int fServo[2] = {0, 0};
+int mode = 0;
+long modeTimer ;
 
 /*----------------- SET UP ---------------*/
 void setup() {
@@ -65,7 +67,6 @@ void loop() {
     firstRun = 1;
   }
 
-  // autoMove();
   // easyMove();
   serialNumberCatch();
 }
@@ -201,6 +202,9 @@ void serialNumberCatch(){
     } else if(chara == 'f'){
       fServo[1] = Serial.read();
       fServo[1] = Serial.read();
+    } else if(chara == 'e'){
+      mode = Serial.read();
+      mode = Serial.read();
     }
     
     switch(flag[1]){
@@ -255,21 +259,24 @@ void serialNumberCatch(){
       stepper2.moveTo(40000 / 8 * 7);
       break;
     }
-    if(fServo[0] == 0){
-        myservo1.write(0);
-        // delay(10);
-      } else if(fServo[0] == 1){
-        myservo1.write(120);
-        // delay(10);
-      }
+  }
+  if(fServo[0] == 0){
+      myservo1.write(0);
+    } else if(fServo[0] == 1){
+      myservo1.write(160);
     }
-    if(fServo[1] == 0){
-        myservo2.write(0);
-        // delay(10);
-      } else if(fServo[1] == 1){
-        myservo2.write(120);
-        // delay(10);
-      }
+  if(fServo[1] == 0){
+      myservo2.write(0);
+    } else if(fServo[1] == 1){
+      myservo2.write(120);
+    }
+   if(mode == 1){
+    modeTimer = millis();
+    while(millis() < modeTimer + 74000){
+      autoMove();
+    }
+     mode = 0;
+   }
   stepper1.run();
   stepper2.run();
 }
